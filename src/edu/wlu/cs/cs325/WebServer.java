@@ -13,7 +13,6 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.file.AccessDeniedException;
-import java.util.IllegalFormatException;
 
 import javax.imageio.ImageIO;
 
@@ -46,7 +45,7 @@ public class WebServer {
 		return true;
 	}
 	
-	private static void transmitContents(String fileName, String address, int port) throws UnknownHostException, IOException, IllegalFormatException {
+	private static void transmitContents(String fileName, String address, int port) throws UnknownHostException, IOException, FileFormatException {
 		Socket socket = new Socket(address, port);
 		String extension = fileName.substring(fileName.indexOf('.')).toLowerCase().trim();
 		
@@ -54,8 +53,7 @@ public class WebServer {
 			BufferedImage im = ImageIO.read(new File(fileName));
 			ImageIO.write(im, extension, socket.getOutputStream());
 		} else if(extension.equals("html") || extension.equals("css") || extension.equals("txt")) {
-			FileReader fr = new FileReader(fileName);
-			BufferedReader br = new BufferedReader(fr);
+			BufferedReader br = new BufferedReader(new FileReader(fileName));
 			PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 			
 			String line;
@@ -65,8 +63,11 @@ public class WebServer {
 			
 			br.close();
 		} else {
-			throw new IllegalFormatException();
+			socket.close();
+			throw new FileFormatException();
 		}
+		
+		socket.close();
 	}
 
 }
