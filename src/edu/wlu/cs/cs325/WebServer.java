@@ -45,8 +45,14 @@ public class WebServer {
 		return true;
 	}
 	
-	private static void transmitContents(String fileName, String address, int port) throws UnknownHostException, IOException, FileFormatException {
-		Socket socket = new Socket(address, port);
+	/**
+	 * @param fileName the file name
+	 * @param socket the web server's socket
+	 * @throws UnknownHostException default exception to account for
+	 * @throws IOException default exception to account for
+	 * @throws FileFormatException if you try to send an unsupported file-type over the socket
+	 */
+	private static void transmitContent(String fileName, Socket socket) throws UnknownHostException, IOException, FileFormatException {
 		String extension = fileName.substring(fileName.indexOf('.')).toLowerCase().trim();
 		
 		if(extension.equals("jpg") || extension.equals("jpeg") || extension.equals("gif") || extension.equals("png")) {
@@ -62,12 +68,10 @@ public class WebServer {
 			}
 			
 			br.close();
+			out.close();
 		} else {
-			socket.close();
 			throw new FileFormatException();
 		}
-		
-		socket.close();
 	}
 
 }
