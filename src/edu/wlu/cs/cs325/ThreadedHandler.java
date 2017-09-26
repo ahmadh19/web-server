@@ -17,7 +17,6 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.file.AccessDeniedException;
 import java.util.Date;
-import java.util.StringTokenizer;
 
 import javax.imageio.ImageIO;
 
@@ -29,9 +28,11 @@ import javax.imageio.ImageIO;
 public class ThreadedHandler extends Thread {
 	
 	private Socket incoming;
+	private String docRoot;
 	
-	public ThreadedHandler(Socket incoming) {
+	public ThreadedHandler(Socket incoming, String docRoot) {
 		this.incoming = incoming;
+		this.docRoot = docRoot;
 	}
 	
 	/**
@@ -101,37 +102,14 @@ public class ThreadedHandler extends Thread {
 			} else {
 				throw new Exception("Bad request...");
 			}
-		
-			/*
-			StringTokenizer stringTokenizer = new StringTokenizer(line);
-			
-			if(stringTokenizer.hasMoreElements()) {
-				if(stringTokenizer.nextToken().equalsIgnoreCase("GET")) {
-					if(stringTokenizer.hasMoreElements()) {
-						fileName = stringTokenizer.nextToken();
-					} else {
-						throw new Exception("Bad request.");
-					}
-				} else {
-					throw new Exception("Bad request.");
-				}
-			} else {
-				throw new Exception("Bad request.");
-			}
-			*/
 			
 			// if no explicit fileName is present, use index.html as fileName
 			if(fileName.endsWith("/")) {
 				fileName += "index.html";
 			}
 			
-			// remove leading "/" from fileName
-			if(fileName.indexOf("/")==0) {
-				fileName=fileName.substring(1);
-			}
-			
-			fileName = "/Users/hammad/git/web-server-teamname-null/web_server_files/" + fileName;
-			
+			fileName = docRoot + fileName;
+			System.out.println(fileName);
 			
 			if(fileExists(fileName)) {
 				String contentType = ""; // to be used for the Content-Type response header
@@ -149,11 +127,19 @@ public class ThreadedHandler extends Thread {
 					contentType = "image/gif";
 				}
 				
-				Date today = new Date();
+				Date date = new Date();
 				
-				response = "HTTP/1.0 200 OK\r\n" + "Date: " + today + "\r\n" + 
-				          "Content-Type: "+ contentType +"\r\n\r\n";
+				if(httpProtocol.equals("HTTP/1.0")) { 
+					response = "HTTP/1.0 200 OK\r\n" + 
+					          "Content-Type: "+ contentType +"\r\n\r\n";
+				} else if(httpProtocol.equals("HTTP/1.1")) { 
+					response = "HTTP/1.1 200 OK\r\n" + "Date: " + date + "\r\n" + 
+							"Content-Length: " + "content_length_here" +
+							"Content-Type: " + contentType +"\r\n\r\n";
+				}
 				out.print(response);
+				
+				if(httpProtocol.equals("HTTP/1.0")) incoming.close();
 				
 				transmitContent(fileName);
 			}
