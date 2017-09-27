@@ -29,6 +29,7 @@ public class ThreadedHandler extends Thread {
 	
 	private Socket incoming;
 	private String docRoot;
+	private String responseStatus;
 	
 	public ThreadedHandler(Socket incoming, String docRoot) {
 		this.incoming = incoming;
@@ -44,49 +45,23 @@ public class ThreadedHandler extends Thread {
 	private boolean fileExists(String fileName) throws FileNotFoundException, AccessDeniedException {
 		File f = new File(fileName);
 		
-		if(!f.exists())
+		if(!f.exists()) {
+			responseStatus = "404";
 			throw new FileNotFoundException();
-		else if(!f.canRead())
+		}
+		else if(!f.canRead()) {
+			responseStatus = "403";
 			throw new AccessDeniedException(fileName);
+		}
 		
 		return true;
-	}
-	
-	/**
-	 * @param fileName the file name
-	 * @param socket the web server's socket
-	 * @throws UnknownHostException default exception to account for
-	 * @throws IOException default exception to account for
-	 * @throws FileFormatException if you try to send an unsupported file-type over the socket
-	 */
-	private void transmitContent(String fileName) throws UnknownHostException, IOException, FileFormatException {
-		String extension = fileName.substring(fileName.indexOf('.') + 1).toLowerCase().trim();
-		
-		if(extension.equals("jpg") || extension.equals("jpeg") || extension.equals("gif") || extension.equals("png")) {
-			BufferedImage im = ImageIO.read(new File(fileName));
-			ImageIO.write(im, extension, incoming.getOutputStream());
-		} else if(extension.equals("html") || extension.equals("css") || extension.equals("txt")) {
-			BufferedReader br = new BufferedReader(new FileReader(fileName));
-			PrintWriter out = new PrintWriter(incoming.getOutputStream(), true);
-			
-			String line;
-			while((line = br.readLine()) != null) {
-				out.println(line);
-			}
-			
-			br.close();
-			out.close();
-		} else {
-			throw new FileFormatException();
-		}
 	}
 	
 	public void run() {
 		try {
 			BufferedReader in = new BufferedReader(new InputStreamReader(incoming.getInputStream()));
 			//PrintWriter out = new PrintWriter(incoming.getOutputStream(), true);
-			PrintStream out=new PrintStream(new BufferedOutputStream(
-			        incoming.getOutputStream()));
+			PrintStream out = new PrintStream(new BufferedOutputStream(incoming.getOutputStream()));
 			String line = in.readLine(); // read the line in the form of "GET /index.html HTTP/1.0"
 			
 			String fileName = "";
@@ -100,7 +75,8 @@ public class ThreadedHandler extends Thread {
 				fileName = parsedLine[1];
 				httpProtocol = parsedLine[2];
 			} else {
-				throw new Exception("Bad request...");
+				responseStatus = "400";
+				throw new BadHTTPRequestException();
 			}
 			
 			// if no explicit fileName is present, use index.html as fileName
@@ -109,7 +85,6 @@ public class ThreadedHandler extends Thread {
 			}
 			
 			fileName = docRoot + fileName;
-			System.out.println(fileName);
 			
 			if(fileExists(fileName)) {
 				String contentType = ""; // to be used for the Content-Type response header
@@ -141,13 +116,42 @@ public class ThreadedHandler extends Thread {
 				
 				if(httpProtocol.equals("HTTP/1.0")) incoming.close();
 				
-				transmitContent(fileName);
+				transmitContents(out, fileName);
 			}
 			
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (AccessDeniedException e) {
+			e.printStackTrace();
+		} catch (BadHTTPRequestException e) {
+			e.printStackTrace();
+		} catch(FileFormatException e) {
+			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
-		} catch (Exception e) {
-			e.printStackTrace();
+		}
+	}
+
+	private void transmitContents(PrintStream out, String fileName)
+			throws IOException, FileNotFoundException, FileFormatException {
+		String extension = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase().trim();
+		
+		if(extension.equals("jpg") || extension.equals("jpeg") || extension.equals("gif") || extension.equals("png")) {
+			BufferedImage im = ImageIO.read(new File(fileName));
+			ImageIO.write(im, extension, out);
+		} else if(extension.equals("html") || extension.equals("css") || extension.equals("txt")) {
+			BufferedReader br = new BufferedReader(new FileReader(fileName));
+			
+			String fileLine;
+			while((fileLine = br.readLine()) != null) {
+				out.println(fileLine);
+			}
+			
+			br.close();
+			out.close();
+			
+		} else {
+			throw new FileFormatException();
 		}
 	}
 	

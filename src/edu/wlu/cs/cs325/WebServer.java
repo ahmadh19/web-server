@@ -18,10 +18,10 @@ public class WebServer {
 		ServerSocket server;
 		
 		String docRoot = args[0];
-		int port = Integer.parseInt(args[1]);
+		int port = Integer.parseInt(args[1]); //TODO: set a default port if none specified
 		
 		try {
-			server = new ServerSocket(port);
+			server = new ServerSocket(port, 15);
 			while(true) {
 				Socket incoming = server.accept();
 				Thread clientThread = new ThreadedHandler(incoming, docRoot);
