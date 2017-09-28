@@ -16,16 +16,15 @@ public class WebServer {
 	 */
 	public static void main(String[] args) {
 		ServerSocket server;
-		String docRoot;
-		int port;
 		
-		if(args.length == 0) { // if no command line arguments specified
-			docRoot = "";  //default document root
-			port = 8888; // default port
-		} else if(args.length == 1) { // if only document root specified
+		// defaults to be used when no command line arguments are provided
+		String docRoot = ""; //default document root
+		int port = 8888; // default port
+		
+		if(args.length == 1) { // if only document root specified 
+							   // assume first argument is always the document root
 			docRoot = args[0];
-			port = 8888;
-		} else { // if both document root and port specified
+		} else if(args.length == 2) { // if both document root and port specified
 			docRoot = args[0];
 			port = Integer.parseInt(args[1]); 
 		}
