@@ -57,8 +57,8 @@ public class ThreadedHandler extends Thread {
 					host = parsedParams[2];
 				
 					// if no explicit fileName is present, use index.html as fileName
-					if(fileName.endsWith("/")) {
-						fileName += "index.html";
+					if(fileName.equals("/")) {
+						fileName = "/index.html";
 					}
 					
 					fileName = docRoot + fileName;
