@@ -46,10 +46,13 @@ public class ThreadedHandler extends Thread {
 				String httpProtocol = "";
 				String host = "";
 				String response = "";
+				String line;
 				
-				String line = in.readLine(); // read the line in the form of "GET /index.html HTTP/1.0"
-				if(line != null) {
+				// read the request
+				if((line = in.readLine()) != null) {
 					
+					System.out.println("Request: '" + line + "'");
+				
 					String[] parsedParams = parseRequest(in, line);
 					
 					fileName = parsedParams[0];
@@ -69,32 +72,43 @@ public class ThreadedHandler extends Thread {
 						Date date = new Date();
 						
 						if(httpProtocol.equals("HTTP/1.0")) { 
-							response = "HTTP/1.0 200 OK\r\n" + 
-									"Content-Length: " + new File(fileName).length() + " " +
+							response = "HTTP/1.0 200 OK\r\n" + "Date: " + date + "\r\n" +  
+									"Content-Length: " + new File(fileName).length() + "\r\n" +
 							        "Content-Type: "+ contentType +"\r\n\r\n";
-						} else if(httpProtocol.equals("HTTP/1.1")) { 
+						} else { 
 							response = "HTTP/1.1 200 OK\r\n" + "Date: " + date + "\r\n" + 
-									"Content-Length: " + new File(fileName).length() + " " +
-									"Content-Type: " + contentType + " " +
+									"Content-Length: " + new File(fileName).length() + "\r\n" +
+									"Content-Type: " + contentType + "\r\n" +
 									"Connection: " + "close" + "\r\n\r\n";
 						}
 						out.print(response);
 						
-						if(httpProtocol.equals("HTTP/1.0")) incoming.close();
-						
 						transmitContents(out, fileName);
+						
+						//if(httpProtocol.equals("HTTP/1.0")) incoming.close();
 					}
 				}
+				
+				out.close();
+				if(httpProtocol.equals("HTTP/1.0") && !incoming.isClosed()) incoming.close();
 			
 			} catch (FileNotFoundException e) {
-				out.print("HTTP/1.1 404 Not Found\r\n" + "Date: " + new Date() + "\r\n" +
+				out.println("HTTP/1.1 404 Not Found\r\n" + "Date: " + new Date() + "\r\n" +
 				          "Content-Type: "+ "text/html" + "\r\n\r\n" + 
-						"<html><body>404 Not Found</body></html>");
+						"<html><body>Error: 404 Not Found</body></html>");
+				out.close();
 				e.printStackTrace();
 			} catch (AccessDeniedException e) {
-				out.print("HTTP/1.1 403 \r\n");
+				out.println("HTTP/1.1 403 Forbidden\r\n" + "Date: " + new Date() + "\r\n" +
+				          "Content-Type: "+ "text/html" + "\r\n\r\n" + 
+						"<html><body>Error: 403 Forbidden</body></html>");
+				out.close();
 				e.printStackTrace();
 			} catch (BadHTTPRequestException e) {
+				out.println("HTTP/1.1 400 Bad Request\r\n" + "Date: " + new Date() + "\r\n" +
+				          "Content-Type: "+ "text/html" + "\r\n\r\n" + 
+						"<html><body>Error: 400 Bad Request</body></html>");
+				out.close();
 				e.printStackTrace();
 			} catch(FileFormatException e) {
 				e.printStackTrace();
@@ -167,6 +181,9 @@ public class ThreadedHandler extends Thread {
 					} else {
 						host = parsedLine[1];
 						returnVals[2] = host;
+						while(!(line = in.readLine()).equals("")) {
+							// read other request headers but don't process them
+						}
 						return returnVals;
 					}
 				} else {
@@ -175,7 +192,11 @@ public class ThreadedHandler extends Thread {
 				}
 			} 
 			
+			while(!(line = in.readLine()).equals("")) {
+				// read other request headers but don't process them
+			}
 			return returnVals;
+			
 		} else {
 			responseStatus = "400";
 			throw new BadHTTPRequestException();
@@ -187,7 +208,6 @@ public class ThreadedHandler extends Thread {
 		String extension = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase().trim();
 		
 		if(extension.equals("jpg") || extension.equals("jpeg") || extension.equals("gif") || extension.equals("png")) {
-			// WHY DOES THIS NOT WORK WITH RESPONSE HEADERS???
 			BufferedImage im = ImageIO.read(new File(fileName));
 			ImageIO.write(im, extension, out);
 		} else if(extension.equals("html") || extension.equals("css") || extension.equals("txt")) {
@@ -199,7 +219,6 @@ public class ThreadedHandler extends Thread {
 			}
 			
 			br.close();
-			out.close();
 			
 		} else {
 			throw new FileFormatException();
