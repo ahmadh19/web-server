@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+
+<!-- lab2_form.html 
+     A form page for ordering a Subway Sandwich>
+     -->
+<html>
+  <head> <title> Subway Sandwich Artist </title>
+  <link rel="stylesheet" type="text/css" href="style.css" />
+  
+  <script type="text/javascript">
+  	function checkInputs() {
+  		var base = document.forms["sandwichForm"].base;
+  		var cheese = document.forms["sandwichForm"].cheese;
+  		if(cheese.value == "None") {
+  			alert("Please select a cheese type!");
+  			return false;
+  		} else if(base.value == "None") {
+  			alert("Please select a base type!");
+  			return false;
+  		}
+  		return true;
+  		
+  	}
+  </script>
+  
+  </head>
+  <body>
+    <h2> Subway Sandwich Artist: Design your own sandwich!
+    </h2>
+
+<!-- The next line gives the address of the CGI program -->
+
+    <form id="sandwichForm" name="sandwichForm" onsubmit="return checkInputs();" action="SandwichServlet" method="get">
+
+<!-- A borderless table of text widgets for name and address -->
+
+      <table>
+        <tr>
+          <td> Customer Name: </td>  
+          <td> <input type = "text"  name = "name" 
+                      size = "30" />
+          </td>
+        </tr>
+        <tr>
+          <td> Type of Bread: </td>
+          <td> <select name = "bread">
+	      <option> White Bread </option>
+	      <option> Wheat Bread </option>
+	      <option> Wheat Roll </option>
+          </td>
+        </tr>
+        <tr>
+          <td> Type of Base: </td>
+          <td> <select name = "base">
+	      <option> None </option>
+	      <option> Turkey </option>
+	      <option> Ham </option>
+	      <option> Roast Beef </option>
+	      <option> Tuna </option>
+	      <option> Veggies </option>
+          </td>
+        </tr>
+	<tr>
+          <td> Type of Cheese: </td>
+          <td> <select name = "cheese">
+	      <option> None </option>
+	      <option> Swiss </option>
+	      <option> American </option>
+	      <option> Provolone </option>
+	      <option> Pepperjack </option>
+          </td>
+        </tr>
+
+	<tr>
+	  <td> Condiments: </td>
+	  <td>
+	     <label> <input type = "checkbox"  name = "condiments"  
+                       value = "Mustard" /> 
+                       Mustard 
+             </label> 
+             <label> <input type = "checkbox"  name = "condiments"  
+                       value = "Mayonaise" /> 
+                       Mayonaise 
+             </label> 
+	     <label> <input type = "checkbox"  name = "condiments"  
+                       value = "Oil" /> 
+                       Oil
+             </label> 
+	     <label> <input type = "checkbox"  name = "condiments"  
+                       value = "Vinegar" /> 
+                       Vinegar 
+             </label> 
+	  </td>
+	</tr>
+	<tr>
+	  <td> For Here or To Go: </td>
+	  <td>
+	     <label> <input type = "radio"  name = "hereornot"  
+                       value = "For Here" checked="checked"/> 
+                       For Here 
+             </label> 
+             <label> <input type = "radio"  name = "hereornot"  
+                       value = "To Go" /> 
+                       To Go 
+             </label> 
+	  </td>
+	</tr>
+	<tr>
+          <td> Customer Notes: </td>  
+          <td> <input type = "text"  name = "notes" 
+                      size = "150" />
+          </td>
+        </tr>
+      </table>
+    <p />
+
+
+<!-- The submit and reset buttons -->
+
+      <p>
+        <input type = "submit"  value = "Submit Order" />
+        <input type = "reset"  value = "Clear Order Form" />
+      </p>
+    </form>
+  </body>
+</html>

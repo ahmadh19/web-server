@@ -125,7 +125,7 @@ public class ThreadedHandler extends Thread {
 	 * @throws FileNotFoundException if the file isn't found
 	 * @throws AccessDeniedException if the file doesn't have read permissions
 	 */
-	private boolean fileExists(String fileName) throws FileNotFoundException, AccessDeniedException {
+	public boolean fileExists(String fileName) throws FileNotFoundException, AccessDeniedException {
 		File f = new File(fileName);
 		
 		if(!f.exists()) {
@@ -140,7 +140,7 @@ public class ThreadedHandler extends Thread {
 		return true;
 	}
 	
-	private String getContentType(String fileName) {
+	public String getContentType(String fileName) {
 		String contentType = "";
 		if(fileName.endsWith(".html")) {
 			contentType = "text/html";
@@ -158,7 +158,7 @@ public class ThreadedHandler extends Thread {
 		return contentType;
 	}
 
-	private String[] parseRequest(BufferedReader in, String line)
+	public String[] parseRequest(BufferedReader in, String line)
 			throws IOException, BadHTTPRequestException {
 		String fileName, httpProtocol, host;
 		String[] parsedLine = line.split("\\s");
@@ -203,7 +203,7 @@ public class ThreadedHandler extends Thread {
 		}
 	}
 
-	private void transmitContents(PrintStream out, String fileName)
+	public void transmitContents(PrintStream out, String fileName)
 			throws IOException, FileNotFoundException, FileFormatException {
 		String extension = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase().trim();
 		

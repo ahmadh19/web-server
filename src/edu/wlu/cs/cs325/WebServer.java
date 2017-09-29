@@ -30,10 +30,12 @@ public class WebServer {
 		}
 		
 		try {
-			server = new ServerSocket(port, 15);
+			server = new ServerSocket(port, 15); // backlog of 15 connections
 			while(true) {
 				Socket incoming = server.accept();
 				Thread clientThread = new ThreadedHandler(incoming, docRoot);
+				//clientThread.activeCount();
+				//incoming.setSoTimeout(1);
 				clientThread.start();
 			}
 		} catch (IOException e) {
