@@ -14,6 +14,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.nio.file.AccessDeniedException;
 import java.util.Date;
@@ -49,10 +50,8 @@ public class ThreadedHandler extends Thread {
 				String line;
 				
 				// read the request
-				if((line = in.readLine()) != null) {
+				while((line = in.readLine()) != null) {
 					
-					System.out.println("Request: '" + line + "'");
-				
 					String[] parsedParams = parseRequest(in, line);
 					
 					fileName = parsedParams[0];
@@ -85,12 +84,15 @@ public class ThreadedHandler extends Thread {
 						
 						transmitContents(out, fileName);
 						
-						//if(httpProtocol.equals("HTTP/1.0")) incoming.close();
+						out.flush();
+						
+						if(httpProtocol.equals("HTTP/1.0")) in.close();
 					}
 				}
 				
 				out.close();
 				if(httpProtocol.equals("HTTP/1.0") && !incoming.isClosed()) incoming.close();
+				
 			
 			} catch (FileNotFoundException e) {
 				out.println("HTTP/1.1 404 Not Found\r\n" + "Date: " + new Date() + "\r\n" +
@@ -111,6 +113,9 @@ public class ThreadedHandler extends Thread {
 				out.close();
 				e.printStackTrace();
 			} catch(FileFormatException e) {
+				e.printStackTrace();
+			} catch(SocketTimeoutException e) {
+				incoming.close(); // close connection if a timeout has occurred
 				e.printStackTrace();
 			}
 			
@@ -181,7 +186,7 @@ public class ThreadedHandler extends Thread {
 					} else {
 						host = parsedLine[1];
 						returnVals[2] = host;
-						while(!(line = in.readLine()).equals("")) {
+						while((line = in.readLine()) != null && !line.equals("")) {
 							// read other request headers but don't process them
 						}
 						return returnVals;
@@ -191,8 +196,8 @@ public class ThreadedHandler extends Thread {
 					throw new BadHTTPRequestException();
 				}
 			} 
-			
-			while(!(line = in.readLine()).equals("")) {
+		
+			while((line = in.readLine()) != null && !line.equals("")) { //TODO: handle if incoming has been closed
 				// read other request headers but don't process them
 			}
 			return returnVals;

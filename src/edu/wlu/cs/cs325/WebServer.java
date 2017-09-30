@@ -14,6 +14,7 @@ public class WebServer {
 
 	/**
 	 */
+	@SuppressWarnings("static-access")
 	public static void main(String[] args) {
 		ServerSocket server;
 		
@@ -34,8 +35,17 @@ public class WebServer {
 			while(true) {
 				Socket incoming = server.accept();
 				Thread clientThread = new ThreadedHandler(incoming, docRoot);
-				//clientThread.activeCount();
-				//incoming.setSoTimeout(1);
+				int activeCount = clientThread.activeCount();
+				if(activeCount == 1) {
+					System.out.println("1");
+					incoming.setSoTimeout(20000);
+				} else if(activeCount <= 10) {
+					System.out.println("2");
+					incoming.setSoTimeout(10000);
+				} else {
+					System.out.println("3");
+					incoming.setSoTimeout(5000);
+				}
 				clientThread.start();
 			}
 		} catch (IOException e) {
